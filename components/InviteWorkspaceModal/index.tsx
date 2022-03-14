@@ -23,8 +23,8 @@ const InviteWorkspaceModal: VFC<Props> = ({ show, onCloseModal, setShowInviteWor
     revalidate,
     mutate,
   } = useSWR<IUser | false>('/api/users', fetcher, { dedupingInterval: 2000 });
-  const { data: channelData, revalidate: revalidateChannel } = useSWR<IChannel[]>(
-    userData ? `/api/workspaces/${workspace}/channels` : null,
+  const { revalidate: revalidateMember } = useSWR<IChannel[]>(
+    userData ? `/api/workspaces/${workspace}/members` : null,
     fetcher,
   );
   const onInviteWorkspace = useCallback(
@@ -35,12 +35,13 @@ const InviteWorkspaceModal: VFC<Props> = ({ show, onCloseModal, setShowInviteWor
       axios
         .post(`/api/workspaces/${workspace}/members`, { email: newMember }, { withCredentials: true })
         .then(() => {
-          revalidateChannel();
+          revalidateMember();
           setShowInviteWorkspaceModal(false);
           setNewMember('');
         })
         .catch((error) => {
           console.dir(error);
+          alert(error.response?.data);
           toast.error(error.response?.data, { position: 'bottom-center' });
         });
     },

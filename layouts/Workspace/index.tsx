@@ -29,6 +29,7 @@ import {
   WorkspaceModal,
 } from '@layouts/Workspace/styles';
 import DMList from '@components/DMList';
+import ChannelList from '@components/ChannelList';
 
 const Channel = loadable(() => import('@pages/Channel'));
 const DirectMessage = loadable(() => import('@pages/DirectMessage'));
@@ -75,7 +76,9 @@ const Workspace: VFC = () => {
     setShowCreateChannelModal((prev) => !prev);
   }, []);
 
-  const onClickInviteWorkspace = useCallback(() => {}, []);
+  const onClickInviteWorkspace = useCallback(() => {
+    setShowInviteWorkspaceModal((prev) => !prev);
+  }, []);
   const onClickInviteChannel = useCallback(() => {}, []);
 
   if (userData === undefined) {
@@ -124,14 +127,13 @@ const Workspace: VFC = () => {
             <Menu show={showWorkspaceModal} onCloseModal={toggleWorkspaceModal} style={{ top: 95, left: 80 }}>
               <WorkspaceModal>
                 <h2>Sleact</h2>
+                <button onClick={onClickInviteWorkspace}>워크스페이스 초대하기</button>
                 <button onClick={onClickAddChannel}>채널만들기</button>
                 <button onClick={onLogout}>로그아웃</button>
               </WorkspaceModal>
             </Menu>
-            {channelData?.map((v) => (
-              <div>{v.name}</div>
-            ))}
-            <DMList userData={userData} />
+            <ChannelList />
+            <DMList />
           </MenuScroll>
         </Channels>
         <Chats>
