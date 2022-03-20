@@ -4,6 +4,7 @@ import { NavLink } from 'react-router-dom';
 import useSWR from 'swr';
 import fetcher from '@utils/fetcher';
 import { IDM, IUser, IUserWithOnline } from '@typings/db';
+import useSocket from '@hooks/useSocket';
 import { CollapseButton } from '@components/DMList/styles';
 
 const DMList: VFC = () => {
@@ -18,9 +19,20 @@ const DMList: VFC = () => {
     userData ? `/api/workspaces/${workspace}/members` : null,
     fetcher,
   );
+  const [socket, disconnect] = useSocket(workspace);
   const [channelCollapse, setChannelCollapse] = useState(false);
   const [countList, setCountList] = useState<{ [key: string]: number }>({});
   const [onlineList, setOnlineList] = useState<number[]>([]);
+
+  useEffect(() => {
+    socket?.on('onlineList', (data: number[]) => {
+      setOnlineList(data);
+    });
+
+    return () => {
+      socket?.off('onlienList');
+    };
+  }, [socket]);
 
   const toggleChannelCollapse = useCallback(() => {
     setChannelCollapse((prev) => !prev);

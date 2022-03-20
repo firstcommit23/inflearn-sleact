@@ -17,7 +17,6 @@ const Login = () => {
     (e) => {
       e.preventDefault();
       setLogInError('');
-      console.log(email, password);
       if (!email || !password) {
         setLogInError('아이디 및 패스워드를 입력하세요.');
         return;
@@ -25,8 +24,8 @@ const Login = () => {
       axios
         .post('/api/users/login', { email, password }, { withCredentials: true })
         .then((response) => {
-          mutate(response.data, true); // 서버 요청 보내지 않고, 입력값을 넣음. OPTIMISTIC UI
-          //revalidate(); // user정보 재조회
+          //mutate(response.data, true); // 서버 요청 보내지 않고, 입력값을 넣음. OPTIMISTIC UI
+          revalidate(); // user정보 재조회
         })
         .catch((error) => {
           setLogInError(error.response.data);
