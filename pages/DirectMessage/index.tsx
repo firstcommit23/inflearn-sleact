@@ -11,6 +11,7 @@ import { Container, Header } from '@pages/DirectMessage/styles';
 import axios from 'axios';
 import makeSection from '@utils/makeSection';
 import Scrollbars from 'react-custom-scrollbars';
+import useSocket from '@hooks/useSocket';
 
 const DirectMessage = () => {
   const { workspace, id } = useParams<{ workspace: string; id: string }>();
@@ -25,6 +26,7 @@ const DirectMessage = () => {
     (index) => `/api/workspaces/${workspace}/dms/${id}/chats?perPage=20&page=${index + 1}`,
     fetcher,
   );
+  const [socket] = useSocket(workspace);
 
   const isEmpty = chatData?.[0]?.length === 0;
   const isReachingEnd = isEmpty || (chatData && chatData[chatData.length - 1]?.length < 20) || false;
@@ -64,6 +66,35 @@ const DirectMessage = () => {
     },
     [chat, chatData, myData, userData, workspace, id],
   );
+
+  const onMessage = useCallback((data: IDM) => {
+    if (data.SenderId === Number(id)) {
+      mutateChat((chatData) => {
+        chatData?.[0].unshift(data);
+        return chatData;
+      }, false).then(() => {
+        if (scrollbarRef.current) {
+          // 현재 스크롤이 150px 보다 아래에 있을 경우에만 스크롤 이동 해줌. 위에 내용 읽고 있을때 스크롤 이동 되면 안되기 때문에.
+          if (
+            scrollbarRef.current.getScrollHeight() <
+            scrollbarRef.current.getClientHeight() + scrollbarRef.current.getScrollTop() + 150
+          ) {
+            setTimeout(() => {
+              scrollbarRef.current?.scrollToBottom();
+            }, 50);
+          }
+        }
+      });
+    }
+  }, []);
+
+  // socket 달기
+  useEffect(() => {
+    socket?.on('dm', onMessage);
+    return () => {
+      socket?.off('dm', onMessage);
+    };
+  });
 
   // 로딩 시 스크롤바 제일 아래로
   useEffect(() => {
