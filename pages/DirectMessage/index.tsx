@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import { useParams } from 'react-router';
 import useSWR, { useSWRInfinite } from 'swr';
 import { IDM } from '@typings/db';
@@ -14,8 +14,8 @@ import Scrollbars from 'react-custom-scrollbars';
 
 const DirectMessage = () => {
   const { workspace, id } = useParams<{ workspace: string; id: string }>();
-  const { data: userData } = useSWR<any>(`/api/workspaces/${workspace}/users/${id}`, fetcher);
-  const { data: myData } = useSWR<any>('/api/users', fetcher);
+  const { data: userData } = useSWR(`/api/workspaces/${workspace}/users/${id}`, fetcher);
+  const { data: myData } = useSWR('/api/users', fetcher);
   const {
     data: chatData,
     mutate: mutateChat,
@@ -36,18 +36,41 @@ const DirectMessage = () => {
     (e: any) => {
       console.log(chat);
       e.preventDefault();
-      if (chat?.trim()) {
+      if (chat?.trim() && chatData) {
+        const savedChat = chat;
+        // 옵티미스틱 UI
+        mutateChat((prevChatData) => {
+          prevChatData?.[0].unshift({
+            id: (chatData[0][0]?.id || 0) + 1,
+            content: savedChat,
+            SenderId: myData.id,
+            Sender: myData,
+            ReceiverId: userData.id,
+            Receiver: userData,
+            createdAt: new Date(),
+          });
+          return prevChatData;
+        }, false).then(() => {
+          setChat('');
+          scrollbarRef.current?.scrollToBottom();
+        });
         axios
           .post(`/api/workspaces/${workspace}/dms/${id}/chats`, { content: chat })
           .then(() => {
             revalidate();
-            setChat('');
           })
           .catch(console.error);
       }
     },
-    [chat, revalidate],
+    [chat, chatData, myData, userData, workspace, id],
   );
+
+  // 로딩 시 스크롤바 제일 아래로
+  useEffect(() => {
+    if (chatData?.length === 1) {
+      scrollbarRef.current?.scrollToBottom();
+    }
+  }, [chatData]);
   if (!userData || !myData) return null;
 
   const chatSections = makeSection(chatData ? chatData.flat().reverse() : []);

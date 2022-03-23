@@ -30,8 +30,8 @@ export interface IDM {
   id: number;
   SenderId: number;
   Sender: IUser;
-  ReveiverId: number;
-  Revevier: IUser;
+  ReceiverId: number;
+  Receiver: IUser;
   content: string;
   createdAt: Date;
 }
