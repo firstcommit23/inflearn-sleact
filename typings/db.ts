@@ -20,8 +20,8 @@ export interface IChat {
   id: number;
   UserId: number;
   User: IUser;
-  content: String;
-  createAt: Date;
+  content: string;
+  createdAt: Date;
   ChannelId: number;
   Channel: IChannel;
 }
